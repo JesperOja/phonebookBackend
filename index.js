@@ -5,7 +5,18 @@ const app = express()
 const morgan = require('morgan')
 const cors = require('cors')
 const Person = require('./models/person')
+const { request } = require('express')
 
+
+const errorHandler = (error, request, response, next) => {
+    console.error(error.message)
+  
+    if (error.name === 'CastError') {
+      return response.status(400).send({ error: 'malformatted id' })
+    }
+  
+    next(error)
+  }
 app.use(cors())
 morgan.token('data', function getData (req){
     return [JSON.stringify(req.body)]
@@ -21,15 +32,12 @@ app.use(morgan(':method :url :status :res[content-length] - :response-time ms :d
     return req.method !== 'POST'
 }}))
 app.use(express.static('build'))
-
+app.use(errorHandler)
+/*
 let persons = [
 
 ]
-
-const generateId = () =>{
-    const id = Math.random()*10000
-    return id
-}
+*/
 
 app.get('/info', (req, res) => {
     
@@ -44,32 +52,42 @@ app.get('/api/persons', (req, res) =>{
     
 })
 
-app.delete('/api/persons/:id', (request, response) => {
-    const id = Number(request.params.id)
-    persons = persons.filter(person => person.id !== id)
-  
-    response.status(204).end()
+app.delete('/api/persons/:id', (request, response, next) => {
+    Person.findByIdAndRemove(request.params.id).then(result => {
+        response.status(204).end()
+    }).catch(error => next(error))
   })
 
-app.get('/api/persons/:id', (request, response) => {
+app.get('/api/persons/:id', (request, response, next) => {
     Person.findById(request.params.id).then(person =>{
-        response.json(person)
-    })
+        if(oerson){
+            response.json(person)
+        }else{
+            response.status(404).end()
+        }
+        
+    }).catch(error =>next(error))
   })
 
+app.put('/api/persons/:id'), (request, response, next) => {
+    const body = request.body
+
+    const person = {
+        name: body.name,
+        number: body.number
+    }
+
+    Person.findByIdAndUpdate(request.params.id, person, {new: true})
+        .then(updatePerson => {
+            response.json(updatePerson)
+        }).catch(error => next(error))
+}
 app.post('/api/persons', (req, res) =>{  
     const body = req.body
 
     if(!body.name || !body.number){
         return res.status(400).json({
             error: 'content missing'
-        })
-    }
-
-    const onList = persons.find(person => person.name === body.name)
-    if(onList){
-        return res.status(400).json({
-            error: 'name must be unique'
         })
     }
 
