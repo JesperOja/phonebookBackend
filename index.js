@@ -5,7 +5,7 @@ const app = express()
 const morgan = require('morgan')
 const cors = require('cors')
 const Person = require('./models/person')
-const { request } = require('express')
+//const { request } = require('express')
 
 
 const errorHandler = (error, request, response, next) => {
@@ -40,9 +40,13 @@ let persons = [
 */
 
 app.get('/info', (req, res) => {
-    
+    let count = 0;
+    Person.find({}).then(persons =>{
+        count++;
+        console.log(count)
+    })
     const date = new Date()
-    res.send(`<p>Phonebook has info for ${persons.length} people</p><p>${date}</p>`)
+    res.send(`<p>Phonebook has info for ${count} people</p><p>${date}</p>`)
   })
 
 app.get('/api/persons', (req, res) =>{
@@ -60,7 +64,7 @@ app.delete('/api/persons/:id', (request, response, next) => {
 
 app.get('/api/persons/:id', (request, response, next) => {
     Person.findById(request.params.id).then(person =>{
-        if(oerson){
+        if(person){
             response.json(person)
         }else{
             response.status(404).end()
@@ -77,9 +81,9 @@ app.put('/api/persons/:id'), (request, response, next) => {
         number: body.number
     }
 
-    Person.findByIdAndUpdate(request.params.id, person, {new: true})
-        .then(updatePerson => {
-            response.json(updatePerson)
+    Person.findByIdAndUpdate(request.params.id, person, { new: true })
+        .then(updatedPerson => {
+                response.json(updatedPerson)
         }).catch(error => next(error))
 }
 app.post('/api/persons', (req, res) =>{  
