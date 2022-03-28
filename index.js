@@ -67,13 +67,12 @@ app.get('/api/persons', (req, res) => {
 })
 
 app.get('/info', (req, res) => {
-  let count = 0
-  Person.find({}).then(() => {
-    count++
-    console.log(count)
-  })
+  const data = Person.find()
   const date = new Date()
-  res.send(`<p>Phonebook has info for ${count} people</p><p>${date}</p>`)
+  data.count(function (err, count) {
+    if(err) console.log(err)
+    else res.send(`<p>Phonebook has info for ${count} people</p><p>${date}</p>`)
+  })
 })
 
 app.delete('/api/persons/:id', (request, response, next) => {
